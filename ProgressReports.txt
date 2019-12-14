@@ -1,0 +1,62 @@
+Progress Reports
+
+Progress Report 1.  Sunday, September 15, 2019.  
+Retention is useful for institutions of higher education to gauge their effectiveness and to help improve their programs.  Retention rates are one of the most frequently reported value to agencies and organizations and have high weightings within college rankings. Within institution, trends in retention have strong interest but the processes and methods of analyzing student attributes and demographics within retention may not be standardized.  Requests for retention data are usually ad hoc and typically ask for basic breakdown of a few common demographics. 
+
+This project attempts to provide a more complete and automated method for retrieving the data, manipulating it for export into statistical and visualization software.  It also will describe the data that may have changed through the years so decision-makers understand the impacts of the data when retention rates are changed.
+
+The first part of the project is to create a SQL script that retrieves 14 years of data that goes back to the installation of the database associated with the current Student Management System (SMS).  The data set retrieved by the script currently includes 13 columns of data:
+
+Unique ID
+Cohort year
+Gender
+Race/ethnicity (based on the old race/ethnicity categories prior to the Fall of 2010)
+Race/ethnicity (based on the new race/ethnicity categories since the Fall of 2010)  
+First generation
+Degree
+Major
+STEM program (Y/N)
+Military/Veteran status
+Enrolled credits in first term
+Academic index
+Retained (Y/N)
+
+As a self-taught SQL code writer, each column of data has its own quirks so it has taken time to first understand any historical changes over time and why may not be consistent for the different offices admitting students.  For example, first generation is considered to be a User Defined field where a First Generation student is flagged as "Y" but a student who is not first generation is not flagged (NULL).  Then there are students who were flagged as first generation ("Y") but the flag is removed storing a "Blank" (which is different than a NULL).  The international programs office doesn't ask the question about first generation so to avoid those students being reported as "N", the SQL code has be written to look at citizenship and visa status and exclude those students.  Another example of data changing is the Federal Government revising the race and ethnicity categories in the Fall of 2010.  Since the new categories includes a first question about students being "Hispanic" or "Latino", we are unable to simply re-code students under the old categories to the new categories.  Data for the old and new categories is stored in separate database tables.  
+
+My plan is to continue to revise the SQL script that will add columns to the data set after researching any quirks in the data.  Along with this is for me to write the documentation for what the stored data means.
+I've sent Mary Donahoo the SQL script so she can retrieve the data set and begin setting it up in "R".   We've discussed using "R" for statistical analysis, providing access to the output for a wider user base, and machine learning.  It doesn't mean that we will attempt all three especially if we want to explore one are in depth.  Our goal is to provide the results of our project to the institution for their consideration and implementation.  Our hope is that it will provide a more complete, standardized, and automated method of looking at retention.
+
+
+Progress Report 2. September 29, 2019.
+Mary created a wonderful list of toolkit components and individual steps for the project from data retrieval though importing into R.  Included in the steps will be instructions for our customer.
+
+I have been adding additional retention variables into the SQL query but have discovered that additional filters are required to ensure a clean data set.  For example, the SATs were revised in 2016 and the three subject tests (math, read, and writing) were revised to two subject tests (math and combined reading/writing).  For students that have taken multiple old SATs, multiple new SATs, or one each of the old and new, I'll need to ask our client whether she wants the highest score, the latest score, or the score at the time the student was admitted. 
+
+At the same time, I've been adding to the data definitions document that will perform two purposes.  First, it provides the data type for the values and second, it describes the changes in the database for those retention variables since 2004.
+I am also searching articles using the Saint Martin's University library databases to find any student retention analysis using R.  But, what I'm finding are articles from researchers that discuss their statistical methods in terms of retention but don't describe their methods for retrieving the required data.  I have noted this in conferences while smaller schools with one deep institutional researchers have little training to even perform the data preparation.    
+It is this type of project that I hope will help those that have little time to understand the steps required to analyze retention from before actually analyzing the data.
+
+
+
+Project Report 3. October 13, 2019.
+In one of the variables that results from the SQL query, students who withdraw from all of their classes in their initial fall term have a term GPA of 0.00 which is the same as students who fail all of their classes.  I was having trouble identifying students with a term GPA of 0.00 who received a "F" or "XF" grade from those students that received a "W" grade especially if a student received both "W" and "X/XF" grades.  Mary wrote a piece of SQL code that I added to the main SQL code that checks to see if the term GPA is less 0.01 and then checks to see if an  "X" or "XF" grade exists.  If an "X" or "XF" grade exists, then assigned a GPA of 0.00, otherwise assign a GPA of "wd".
+Instead of long variable names that describe the variables, I thought back to our group project in my CSC475 class where the variable names were six characters of less.  The Data Dictionary would be used to provide an explanation of what variable represents.  Mary liked that idea but preferred to use long variable names for titles and labels in R.
+
+In addition to the data dictionary, we are providing data definitions that look at the historical usage of the variables.  Since we are looking at students that started in the Fall of 2004, some things have changed that users will need to know.  For example, when using students' majors, most majors existed prior to the Fall of 2004 and are still active today.  However, some majors were closed and some were created since 2004.  For that were closed, we didn't look at when the majors were officially closed but when the last student was taught out.
+Mary and I met several times to discuss the visualizations in the shiny app.  I contributed a graph produced in R that shows final GPAs along the x-axis and mid-term GPAs along the y-axis and whether the students were retained by coloring the plot.
+I have started writing the ACM paper and will sent it to Mary for her input since she is the main manipulator of R.  Since I'm leaving to go to Michigan on Saturday, we'll need to discuss on whether we should submit before or Mary can submit it after.  I also need to finish the data definitions (the data dictionary is done) and need to start on the presentation.  We expect that the presentation will start with PowerPoint but will involve a demonstration.
+
+
+Project  Report 4.  October 27, 2019
+I wrote the paper for SIGCSE 2020 and started the first half and started collecting the materials for the presentation.  Since I was on vacation last week, most of the work in the week prior was to prepare for the midterm presentation.  Once that is done, we can continue to follow our plan but still go back to earlier steps and adjust the data while Mary updates the shiny dashboard.  
+
+
+Progress Report  5.  November 10, 2019.
+I spent some time with the SQL code that retrieves the data used in the shiny dashboard to come up with a way to convert the students ID to a random value to protect the privacy in the data set as discussed in the mid-term presentation.  I created a statement that adds a 16 bit string as a proxy for the Student ID that has a very low probability of a collision.  In the SQL SELECT statement, the term DISTINCT is used to prevent duplicate records.  However, duplicate records have unique 16 bit strings as the ID which offsets the purpose of the DISTINCT term.  In testing, my second method "REPLACE(STR(CAST(CAST(NEWID() AS binary(5)) AS bigint),12),0,0), took 94 seconds to run rather than 3 seconds without that line and also produces duplicate records.  I'll need to investigate it further so for now I am using a four digit constant to add to the student ID which is not the preferred method.  Mary suggested I create a data glossary to help with some of the terms.  Some of the information came from the data descriptions and I think that the glossary should eventually replace the data descriptions resulting in a glossary (what the data means and how it applies) and a data dictionary (which defines the data variables).  Shifting to the glossary it has a need for formal references such as the definitions for the race and ethnicity categories and first generation with the latter having multiple definitions.
+
+
+Progress Report 6.  November 24, 2019.
+	
+Since the last progress report, I starting creating the template for the final paper.  Some of the work already done for the ACM competition was used for the early sections of the report with more of the "flushing out" of the details yet to come.  I looked at two companies that provide similar student retention dashboards.  The first is GlyphEd and their Student SuccessGlyphKIT which contains a collection of visualizations to choose from and uses spreadsheet data sets and Python as the underlying code for the visualization dashboard.  The second which is very much in demand among Institutional Researchers is Tableau.  I have talked to Tableau vendors at conferences but didn't get much support from IT to help establish a connection with the database.  A single-user license costs $840 per year and it can be either Tableau-hosted or institution-hosted with a Tableau server.  For organizations, there are three levels of Tableau.  The first, Viewer, can interact with content on the Tableau Server and costs $144 per year per user with a minimum 100 users.  The second level, Explorer, can connect to any published data source and allows users to author and share content.  Its cost is $420 per year per user with a minimum 5 users.  The highest level, Creator, connects to any type of data  and performs visualization data prep  which sounds like ETL in data warehousing.  It costs $840 per year per user and requires a Creator role.
+
+
